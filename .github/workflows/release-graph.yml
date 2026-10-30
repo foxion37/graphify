@@ -7,12 +7,14 @@ on:
 
 jobs:
   build-graph:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository == 'foxion37/graphify' && github.ref == 'refs/heads/v8' && contains(fromJSON('["push","workflow_dispatch","schedule"]'), github.event_name) && 'mac-mini-linux-arm64' || 'ubuntu-latest' }}
     permissions:
-      contents: write  # needed to upload release assets
+      contents: read
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
@@ -49,16 +51,24 @@ jobs:
           echo "Asset contents:"
           tar -tzf graphify-self-graph.tar.gz
 
-      - name: Upload to GitHub release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: graphify-self-graph.tar.gz
-
-      - name: Upload as workflow artifact (for workflow_dispatch runs)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Upload graph artifact
         uses: actions/upload-artifact@v4
         with:
           name: graphify-self-graph
           path: graphify-self-graph.tar.gz
           retention-days: 7
+
+  publish-graph:
+    if: github.event_name == 'release'
+    needs: build-graph
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: graphify-self-graph
+      - name: Upload to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: graphify-self-graph.tar.gz
