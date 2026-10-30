@@ -24,6 +24,11 @@ jobs:
           # (rather than skipping). The other jobs stay shallow.
           fetch-depth: 0
 
+      - name: Set up Python with development headers
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
@@ -59,6 +64,11 @@ jobs:
           # baseline commit via `git show`; a shallow checkout omits that history
           # and the baseline tests fail. Full history mirrors the skillgen-check job.
           fetch-depth: 0
+
+      - name: Set up Python with development headers
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
